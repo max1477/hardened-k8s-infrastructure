@@ -1,0 +1,26 @@
+name: DevSecOps Infrastructure Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-and-scan:
+    name: Security & Compliance Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Скачиваем код репозитория на виртуальную машину GitHub
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Запускаем официальный экшен Checkov для проверки K8s манифестов
+    - name: Run Checkov Reviewer
+      uses: bridgecrewio/checkov-action@master
+      with:
+        directory: k8s/
+        framework: kubernetes
+        compact: true
+        quiet: true # Выводить только ошибки, если они появятся
