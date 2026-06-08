@@ -44,7 +44,8 @@ spec:
           type: RuntimeDefault
       containers:
       - name: nginx-container
-        image: nginxinc/nginx-unprivileged:1.25.3
+        image: my-secure-frontend:v1
+        imagePullPolicy: Never
         env:
         - name: MY_DB_PASSWORD
           valueFrom:
