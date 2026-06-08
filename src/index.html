@@ -33,9 +33,31 @@
         <p>Zero-Trust Kubernetes Infrastructure Active</p>
         <div class="status">● System Status: Fully Operational</div>
         <br>
-        <button class="mock-button" onclick="alert('Backend module (Redis+Python) will be connected soon!')">
-            Connect Margin Backend
+        <button class="mock-button" onclick="fetchMargin()">
+            Request Margin Data (XRP)
         </button>
+        <p id="result" style="margin-top: 20px; font-weight: bold;"></p>
     </div>
+
+    <script>
+        async function fetchMargin() {
+            const btn = document.querySelector('.mock-button');
+            const resText = document.getElementById('result');
+            btn.innerText = "Loading...";
+            
+            try {
+                // Обращаемся к нашему внутреннему API
+                const response = await fetch('/api/margin');
+                const data = await response.json();
+                
+                resText.innerText = `[ DATA ] Margin: ${data.margin} | Source: ${data.source}`;
+                resText.style.color = (data.source === 'REDIS_CACHE') ? '#00ff9d' : '#ffcc00';
+            } catch (error) {
+                resText.innerText = "[ ERROR ] Backend is unreachable.";
+                resText.style.color = "red";
+            }
+            btn.innerText = "Request Margin Data (XRP)";
+        }
+    </script>
 </body>
 </html>
