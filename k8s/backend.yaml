@@ -41,7 +41,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: python-backend
-        image: my-secure-backend:v1
+        image: ghcr.io/max1477/hardened-k8s-infrastructure/my-secure-backend:latest
         imagePullPolicy: Always
         env:
         # ЗАЩИТА: Запрещаем Python писать временные файлы кэша на Read-Only диск

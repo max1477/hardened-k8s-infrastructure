@@ -48,7 +48,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: nginx-container
-        image: my-secure-frontend:v2
+        image: ghcr.io/max1477/hardened-k8s-infrastructure/my-secure-frontend:latest
         imagePullPolicy: Always
         env:
         - name: MY_DB_PASSWORD
