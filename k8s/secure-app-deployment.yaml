@@ -49,7 +49,7 @@ spec:
       containers:
       - name: nginx-container
         image: my-secure-frontend:v2
-        imagePullPolicy: Never
+        imagePullPolicy: Always
         env:
         - name: MY_DB_PASSWORD
           valueFrom:

@@ -42,7 +42,7 @@ spec:
       containers:
       - name: python-backend
         image: my-secure-backend:v1
-        imagePullPolicy: Never
+        imagePullPolicy: Always
         env:
         # ЗАЩИТА: Запрещаем Python писать временные файлы кэша на Read-Only диск
         - name: PYTHONDONTWRITEBYTECODE
