@@ -6,22 +6,60 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# Выделяем права для работы с GitHub Packages (Складом образов)
+permissions:
+  contents: read
+  packages: write
+
 jobs:
-  lint-and-scan:
+  security_audit:
     name: Security & Compliance Scan
     runs-on: ubuntu-latest
-
     steps:
-    # 1. Скачиваем код репозитория на виртуальную машину GitHub
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
-    # 2. Запускаем официальный экшен Checkov для проверки K8s манифестов
-    - name: Run Checkov Reviewer
-      uses: bridgecrewio/checkov-action@master
-      with:
-        directory: k8s/
-        framework: kubernetes
-        compact: true
-        quiet: true # Выводить только ошибки, если они появятся
-        skip_check: CKV_K8S_15,CKV_K8S_35,CKV_K8S_43
+      - name: Run Checkov Reviewer
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: k8s/
+          framework: kubernetes
+          compact: true
+          quiet: true
+          skip_check: CKV_K8S_15,CKV_K8S_35,CKV_K8S_43
+
+  build_and_push:
+    name: Build & Publish Container Images
+    runs-on: ubuntu-latest
+    needs: security_audit # Сборка начнется ТОЛЬКО если аудит безопасности прошел успешно
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: actions/docker-login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Автоматический внутренний токен GitHub
+
+      # Сборка и отправка Фронтенда
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/my-secure-frontend:latest
+
+      # Сборка и отправка Бэкенда
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/my-secure-backend:latest
