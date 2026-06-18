@@ -1,6 +1,8 @@
 from flask import Flask, jsonify
 import redis
 import os
+import time
+import psycopg2
 
 app = Flask(__name__)
 
@@ -33,3 +35,29 @@ def get_margin():
 if __name__ == '__main__':
     # Слушаем порт 5000
     app.run(host='0.0.0.0', port=5000)
+
+# 1. Считываем переменные, которые Kubernetes прописал в контейнер при старте
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_USER = os.getenv("POSTGRES_USER", "secure_app_user")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "super-secure-password-123")
+DB_NAME = os.getenv("POSTGRES_DB", "secure_app_db")
+
+def get_db_connection():
+    # База данных в K8s при перезапуске может инициализироваться на пару секунд дольше бэкенда.
+    # Применяем паттерн Retry Loop (цикл повторных попыток), чтобы бэкенд не падал при старте.
+    for i in range(5):
+        try:
+            connection = psycopg2.connect(
+                host=DB_HOST,
+                port=DB_PORT,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                database=DB_NAME
+            )
+            print("Успешное подключение к PostgreSQL базе данных!")
+            return connection
+        except psycopg2.OperationalError as e:
+            print(f"База данных еще недоступна, ждем... Попытка {i+1}/5. Ошибка: {e}")
+            time.sleep(3)
+    raise Exception("Критическая ошибка: Не удалось подключиться к базе данных.")

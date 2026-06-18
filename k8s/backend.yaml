@@ -84,3 +84,23 @@ spec:
       volumes:
       - name: tmp-volume
         emptyDir: {}
+template:
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/max1477/hardened-k8s-infrastructure/my-secure-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000 # Порт, на котором слушает ваше приложение
+          
+          # ДОБАВЛЯЕМ ЭТОТ БЛОК ПЕРЕМЕННЫХ ОКРУЖЕНИЯ:
+          env:
+            - name: DB_HOST
+              value: "postgres-service" # Имя сервиса БД внутри кластера K8s
+            - name: DB_PORT
+              value: "5432"
+          
+          # Автоматически импортируем POSTGRES_USER, POSTGRES_PASSWORD и POSTGRES_DB из нашего Secret
+          envFrom:
+            - secretRef:
+                name: postgres-secret
