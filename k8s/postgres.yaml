@@ -19,8 +19,8 @@ metadata:
   annotations:
     checkov.io/skip1: CKV_K8S_22=Базе данных критически необходим доступ на запись
     checkov.io/skip2: CKV_K8S_40=Официальный образ использует UID 70, а не >10000
-    # Добавляем исключение для нашего "спецназа" (ему нужен root)
     checkov.io/skip3: CKV_K8S_23=Init-контейнеру нужен root для смены прав на диск
+    checkov.io/skip4: CKV_K8S_25=Init-контейнеру нужны права CHOWN для подготовки диска
 spec:
   serviceName: "postgres-service"
   replicas: 1
