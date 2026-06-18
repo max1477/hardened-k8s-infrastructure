@@ -43,7 +43,7 @@ spec:
       initContainers:
         - name: fix-pvc-permissions
           image: busybox:1.36
-          command: ["sh", "-c", "chown -R 70:70 /var/lib/postgresql/data"]
+          command: ["sh", "-c", "mkdir -p /var/lib/postgresql/data/db-v2 && chown -R 70:70 /var/lib/postgresql/data/db-v2"]
           securityContext:
             runAsNonRoot: false
             runAsUser: 0 # Временно берем права root
@@ -82,7 +82,7 @@ spec:
                 name: postgres-secret
           env:
             - name: PGDATA
-              value: /var/lib/postgresql/data/pgdata
+              value: /var/lib/postgresql/data/db-v2
           resources:
             requests:
               memory: "128Mi"
