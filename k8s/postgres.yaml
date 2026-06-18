@@ -92,12 +92,12 @@ spec:
               cpu: "500m"
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "secure_app_user"]
+              command: ["pg_isready", "-U", "secure_app_user", "-d", "secure_app_db"]
             initialDelaySeconds: 15
             periodSeconds: 10
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "secure_app_user"]
+              command: ["pg_isready", "-U", "secure_app_user", "-d", "secure_app_db"]
             initialDelaySeconds: 5
             periodSeconds: 5
           volumeMounts:
