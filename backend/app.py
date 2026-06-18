@@ -61,6 +61,7 @@ def get_db_connection():
             print(f"База данных еще недоступна, ждем... Попытка {i+1}/5. Ошибка: {e}")
             time.sleep(3)
     raise Exception("Критическая ошибка: Не удалось подключиться к базе данных.")
+
 @app.route('/test-db')
 def test_db():
     try:
