@@ -1,0 +1,48 @@
+# 1. Сервис для доступа к БД по имени 'postgres-service'
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: secure-prod
+spec:
+  ports:
+    - port: 5432 # Стандартный порт PostgreSQL
+  selector:
+    app: postgres
+---
+# 2. Сам сервер БД
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: secure-db
+  namespace: secure-prod
+spec:
+  serviceName: "postgres-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          # Берем официальный легкий образ PostgreSQL (Alpine Linux)
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            # Секретная магия: берем все переменные (пароли) из нашего Secret!
+            - secretRef:
+                name: postgres-secret
+          volumeMounts:
+            # Подключаем диск внутрь контейнера
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        # Указываем, какой именно диск подключать
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-data-pvc

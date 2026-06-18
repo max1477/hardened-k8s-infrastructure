@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data-pvc
+  namespace: secure-prod
+spec:
+  accessModes:
+    - ReadWriteOnce # Диск может быть подключен только к одному поду одновременно
+  resources:
+    requests:
+      storage: 2Gi # Просим 2 Гигабайта места
