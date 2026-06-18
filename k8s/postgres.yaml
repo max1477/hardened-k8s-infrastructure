@@ -16,6 +16,10 @@ kind: StatefulSet
 metadata:
   name: secure-db
   namespace: secure-prod
+  annotations:
+    # Аннотации перенесены на самый верхний уровень StatefulSet!
+    checkov.io/skip1: CKV_K8S_22=Базе данных критически необходим доступ на запись
+    checkov.io/skip2: CKV_K8S_40=Официальный образ использует UID 70, а не >10000
 spec:
   serviceName: "postgres-service"
   replicas: 1
@@ -26,25 +30,30 @@ spec:
     metadata:
       labels:
         app: postgres
-      # Добавляем исключения для системных проверок образа PostgreSQL
-      annotations:
-        checkov.io/skip1: CKV_K8S_20=Standard postgres requires privilege escalation
-        checkov.io/skip2: CKV_K8S_22=Postgres needs write access to data directories
-        checkov.io/skip3: CKV_K8S_28=NET_RAW is required for standard alpine image
-        checkov.io/skip4: CKV_K8S_31=Seccomp profile is not strictly required for local DB
-        checkov.io/skip5: CKV_K8S_37=Capabilities drop breaks postgres init
     spec:
-      # Запрещаем поду автоматически получать токен доступа к API Kubernetes
       automountServiceAccountToken: false
+      # 1. БАЗОВАЯ ЗАЩИТА (Pod Level): Запрещаем root-доступ
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70       # Стандартный UID пользователя postgres в Alpine
+        runAsGroup: 70
+        fsGroup: 70         # Автоматическая выдача прав на примонтированный жесткий диск
       containers:
         - name: postgres
           image: postgres:15-alpine
           ports:
             - containerPort: 5432
+          # 2. ЖЕСТКАЯ ЗАЩИТА (Container Level): Отбираем все системные привилегии Linux
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
           envFrom:
             - secretRef:
                 name: postgres-secret
-          # Устанавливаем жесткие лимиты, чтобы БД не "съела" память ноутбука
           resources:
             requests:
               memory: "128Mi"
@@ -52,12 +61,17 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          # Учим Kubernetes проверять, жива ли база данных
           livenessProbe:
             exec:
               command: ["pg_isready", "-U", "secure_app_user"]
             initialDelaySeconds: 15
             periodSeconds: 10
+          # 3. ИСПРАВЛЕНИЕ: Добавлена обязательная проверка Readiness
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "secure_app_user"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
