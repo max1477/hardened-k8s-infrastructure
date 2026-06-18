@@ -8,7 +8,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir flask redis
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txtЧЁ
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем наш код
 COPY app.py .
