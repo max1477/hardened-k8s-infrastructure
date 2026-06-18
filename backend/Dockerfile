@@ -7,6 +7,9 @@ WORKDIR /app
 # Устанавливаем нужные библиотеки (веб-сервер Flask и драйвер Redis)
 RUN pip install --no-cache-dir flask redis
 
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txtЧЁ
+
 # Копируем наш код
 COPY app.py .
 
