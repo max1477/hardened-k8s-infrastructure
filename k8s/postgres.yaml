@@ -39,34 +39,6 @@ spec:
         runAsGroup: 70
         fsGroup: 70
       
-      # НОВЫЙ БЛОК: Временный контейнер для подготовки диска
-      initContainers:
-        - name: fix-pvc-permissions
-          image: busybox:1.36
-          command: ["sh", "-c", "mkdir -p /var/lib/postgresql/data/db-v2 && chown -R 70:70 /var/lib/postgresql/data/db-v2"]
-          securityContext:
-            runAsNonRoot: false
-            runAsUser: 0 # Временно берем права root
-            capabilities:
-              add: ["CHOWN"]
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop: ["ALL"]
-              add: ["CHOWN", "FOWNER"] # Даем право только менять владельца файлов
-            seccompProfile:
-              type: RuntimeDefault
-          resources:
-            requests:
-              memory: "32Mi"
-              cpu: "50m"
-            limits:
-              memory: "64Mi"
-              cpu: "100m"
-          volumeMounts:
-            - name: postgres-storage
-              mountPath: /var/lib/postgresql/data
-
       # ОСНОВНАЯ БАЗА ДАННЫХ
       containers:
         - name: postgres
@@ -107,5 +79,4 @@ spec:
               mountPath: /var/lib/postgresql/data
       volumes:
         - name: postgres-storage
-          persistentVolumeClaim:
-            claimName: postgres-data-pvc
+          emptyDir: {}
