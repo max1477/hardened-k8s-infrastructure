@@ -61,3 +61,21 @@ def get_db_connection():
             print(f"База данных еще недоступна, ждем... Попытка {i+1}/5. Ошибка: {e}")
             time.sleep(3)
     raise Exception("Критическая ошибка: Не удалось подключиться к базе данных.")
+@app.route('/test-db')
+def test_db():
+    try:
+        # Открываем подключение к нашей защищенной БД
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Делаем простейший SQL-запрос, чтобы узнать версию Postgres
+        cur.execute('SELECT version();')
+        db_version = cur.fetchone()
+        
+        # Обязательно закрываем соединение, чтобы не "положить" базу
+        cur.close()
+        conn.close()
+        
+        return f"Ура! Бэкенд успешно связался с БД. Отвечает: {db_version[0]}"
+    except Exception as e:
+        return f"База данных недоступна. Ошибка: {str(e)}", 500
