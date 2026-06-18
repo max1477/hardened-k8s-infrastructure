@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-network-policy
+  namespace: secure-prod
+spec:
+  # 1. К кому применяется это правило? К подам базы данных.
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress # Контролируем только входящий трафик
+  ingress:
+    - from:
+        # 2. От кого разрешаем принимать запросы? Только от бэкенда!
+        - podSelector:
+            matchLabels:
+              app: backend
+      ports:
+        - protocol: TCP
+          port: 5432
