@@ -80,3 +80,4 @@ def test_db():
         return f"Ура! Бэкенд успешно связался с БД. Отвечает: {db_version[0]}"
     except Exception as e:
         return f"База данных недоступна. Ошибка: {str(e)}", 500
+# Тест подключения к БД
