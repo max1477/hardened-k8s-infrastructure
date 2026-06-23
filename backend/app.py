@@ -77,7 +77,79 @@ def test_db():
         return f"Ура! Бэкенд успешно связался с БД. Отвечает: {db_version[0]}"
     except Exception as e:
         return f"База данных недоступна. Ошибка: {str(e)}", 500
-# Тест подключения к БД
+
+# ==========================================
+# БЛОК УПРАВЛЕНИЯ ДАННЫМИ (CRUD)
+# ==========================================
+
+def init_db():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    # Создаем таблицу с UNIQUE ограничением, чтобы не плодить дубли активов
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS crypto_assets (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(50) UNIQUE,
+            amount REAL
+        );
+    ''')
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# Инициализируем таблицу при запуске скрипта
+init_db()
+
+@app.route('/add/<name>/<float:amount>')
+def add_asset(name, amount):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    # Умная вставка (UPSERT): если актив уже есть, прибавляем сумму к существующей
+    cur.execute('''
+        INSERT INTO crypto_assets (name, amount) 
+        VALUES (%s, %s)
+        ON CONFLICT (name) 
+        DO UPDATE SET amount = crypto_assets.amount + EXCLUDED.amount;
+    ''', (name, amount))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return f"Успех! Баланс {name} пополнен. Зачислено: {amount}"
+
+@app.route('/assets')
+def get_assets():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT name, amount FROM crypto_assets")
+    assets = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify([{"asset": row[0], "amount": row[1]} for row in assets])
+
+@app.route('/update/<name>/<float:new_amount>')
+def update_asset(name, new_amount):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE crypto_assets SET amount = %s WHERE name = %s", (new_amount, name))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return f"Обновлено: {name} до {new_amount}"
+
+@app.route('/delete/<name>')
+def delete_asset(name):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM crypto_assets WHERE name = %s", (name,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return f"Удалено: {name}"
+
+# ==========================================
+# ЗАПУСК СЕРВЕРА (СТРОГО ВНИЗУ!)
+# ==========================================
+
 if __name__ == '__main__':
     # Слушаем порт 5000
     app.run(host='0.0.0.0', port=5000)
