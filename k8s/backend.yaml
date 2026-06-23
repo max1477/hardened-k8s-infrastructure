@@ -99,6 +99,12 @@ template:
               value: "postgres-service" # Имя сервиса БД внутри кластера K8s
             - name: DB_PORT
               value: "5432"
+            - name: POSTGRES_USER
+              value: "secure_app_user"
+            - name: POSTGRES_PASSWORD
+              value: "super-secure-password-123" # В идеале использовать Secret, как вы уже делаете
+            - name: POSTGRES_DB
+              value: "secure_app_db"
           
           # Автоматически импортируем POSTGRES_USER, POSTGRES_PASSWORD и POSTGRES_DB из нашего Secret
           envFrom:
