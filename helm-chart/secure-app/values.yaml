@@ -1,0 +1,24 @@
+# Настройки бэкенда
+backend:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/max1477/hardened-k8s-infrastructure/my-secure-backend
+    tag: "latest" # Позже в Фазе 1 мы заменим этот тег на динамический (github.sha)
+    pullPolicy: Always
+  service:
+    name: secure-backend
+    port: 5000
+
+# Настройки базы данных
+database:
+  host: "postgres-service"
+  port: "5432"
+  user: "secure_app_user"
+  dbName: "secure_app_db"
+  password: "super-secure-password-123" # Добавили пароль для Секрета
+
+# Настройки фронтенда (на будущее)
+frontend:
+  service:
+    name: "frontend-svc"
+    port: 8080

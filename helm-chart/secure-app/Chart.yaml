@@ -1,0 +1,6 @@
+apiVersion: v2
+name: secure-app
+description: Hardened K8s Infrastructure for Crypto Asset Management
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
