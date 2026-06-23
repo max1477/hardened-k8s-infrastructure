@@ -32,9 +32,6 @@ def get_margin():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-if __name__ == '__main__':
-    # Слушаем порт 5000
-    app.run(host='0.0.0.0', port=5000)
 
 # 1. Считываем переменные, которые Kubernetes прописал в контейнер при старте
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -81,3 +78,6 @@ def test_db():
     except Exception as e:
         return f"База данных недоступна. Ошибка: {str(e)}", 500
 # Тест подключения к БД
+if __name__ == '__main__':
+    # Слушаем порт 5000
+    app.run(host='0.0.0.0', port=5000)
