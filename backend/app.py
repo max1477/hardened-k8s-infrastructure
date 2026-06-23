@@ -100,7 +100,7 @@ def init_db():
 # Инициализируем таблицу при запуске скрипта
 init_db()
 
-@app.route('/add/<name>/<float:amount>')
+@app.route('/api/add/<name>/<float:amount>')
 def add_asset(name, amount):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -116,7 +116,7 @@ def add_asset(name, amount):
     conn.close()
     return f"Успех! Баланс {name} пополнен. Зачислено: {amount}"
 
-@app.route('/assets')
+@app.route('/api/assets')
 def get_assets():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -126,7 +126,7 @@ def get_assets():
     conn.close()
     return jsonify([{"asset": row[0], "amount": row[1]} for row in assets])
 
-@app.route('/update/<name>/<float:new_amount>')
+@app.route('/api/update/<name>/<float:new_amount>')
 def update_asset(name, new_amount):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -136,7 +136,7 @@ def update_asset(name, new_amount):
     conn.close()
     return f"Обновлено: {name} до {new_amount}"
 
-@app.route('/delete/<name>')
+@app.route('/api/delete/<name>')
 def delete_asset(name):
     conn = get_db_connection()
     cur = conn.cursor()
