@@ -28,17 +28,14 @@ jobs:
           quiet: true
           skip_check: CKV_K8S_15,CKV_K8S_35,CKV_K8S_43,CKV_K8S_14
 
-  # ... (всё, что выше, до job 'build_and_push', остается без изменений) ...
-
-  build_and_push:
-    name: Build & Publish Container Images
+  build_scan_and_push:
+    name: Build, Scan & Publish Container Images
     runs-on: ubuntu-latest
     needs: security_audit # Сборка начнется ТОЛЬКО если аудит безопасности прошел успешно
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # 1. НОВЫЙ ШАГ: Генерируем короткий хэш коммита
       - name: Generate Short SHA
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
@@ -53,22 +50,47 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }} # Автоматический внутренний токен GitHub
 
-      # Сборка и отправка Фронтенда (Теперь с динамическим тегом!)
-      - name: Build and Push Frontend
+      # --- FRONTEND: Сборка, Сканирование, Отправка ---
+      - name: Build Frontend (Local Load)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: true
-          # Используем короткий SHA, сгенерированный ранее
+          load: true # ИЗМЕНЕНИЕ: Сохраняем в памяти раннера, не отправляем!
           tags: ghcr.io/${{ github.repository }}/my-secure-frontend:${{ steps.vars.outputs.sha_short }}
 
-      # Сборка и отправка Бэкенда (Теперь с динамическим тегом!)
-      - name: Build and Push Backend
+      - name: Run Trivy on Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/my-secure-frontend:${{ steps.vars.outputs.sha_short }}
+          format: 'table'
+          exit-code: '1' # ИЗМЕНЕНИЕ: Фейлим пайплайн при наличии CRITICAL/HIGH уязвимостей
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Push Frontend to Registry
+        run: docker push ghcr.io/${{ github.repository }}/my-secure-frontend:${{ steps.vars.outputs.sha_short }}
+
+
+      # --- BACKEND: Сборка, Сканирование, Отправка ---
+      - name: Build Backend (Local Load)
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/Dockerfile
-          push: true
-          # Используем короткий SHA, сгенерированный ранее
+          load: true # ИЗМЕНЕНИЕ: Сохраняем в памяти раннера
           tags: ghcr.io/${{ github.repository }}/my-secure-backend:${{ steps.vars.outputs.sha_short }}
+
+      - name: Run Trivy on Backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/my-secure-backend:${{ steps.vars.outputs.sha_short }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Push Backend to Registry
+        run: docker push ghcr.io/${{ github.repository }}/my-secure-backend:${{ steps.vars.outputs.sha_short }}
