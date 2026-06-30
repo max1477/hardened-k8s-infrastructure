@@ -13,9 +13,7 @@ backend:
 database:
   host: "postgres-service"
   port: "5432"
-  user: "secure_app_user"
   dbName: "secure_app_db"
-  password: "super-secure-password-123" # Добавили пароль для Секрета
 
 # Настройки фронтенда (на будущее)
 frontend:
